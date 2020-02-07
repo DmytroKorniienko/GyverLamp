@@ -58,6 +58,14 @@ void timeTick()
       {
         if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
         {
+          #ifdef PRINT_ALARM_TIME
+          #ifdef GENERAL_DEBUG
+          LOG.println(F("Вывод времени в будильнике"));
+          #endif
+          if(printAlarmTimer.isReady())
+            printTime(thisTime, true, ONflag, false, false);              // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
+          #endif
+          
           // величина рассвета 0-255
           int32_t dawnPosition = 255 * ((float)(thisFullTime - (alarms[thisDay].Time - pgm_read_byte(&dawnOffsets[dawnMode])) * 60) / (pgm_read_byte(&dawnOffsets[dawnMode]) * 60));
           dawnPosition = constrain(dawnPosition, 0, 255);
@@ -84,13 +92,6 @@ void timeTick()
           delay(1);
           FastLED.show();
           dawnFlag = true;
-
-          #ifdef PRINT_ALARM_TIME
-          #ifdef GENERAL_DEBUG
-          LOG.println(F("Вывод времени в будильнике"));
-          #endif
-          printTime(thisTime, true, ONflag, false, false);                    // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
-          #endif
         }
 
         #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
