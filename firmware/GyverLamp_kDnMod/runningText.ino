@@ -144,7 +144,10 @@ bool printTime(uint32_t thisTime, bool onDemand, bool ONflag, bool isManual, boo
 
   if (onDemand)
   {
-    letterColor = CRGB::White;
+    if(lampMode!=MODE_ALARMCLOCK)
+      letterColor = CRGB::White;
+    else
+      hsv2rgb_rainbow(dawnColor, letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
   }
 
   if ((needToPrint && thisTime != lastTimePrinted) || onDemand)

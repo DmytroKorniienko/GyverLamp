@@ -1,14 +1,5 @@
 // будильник "рассвет"
 #ifdef USE_NTP
-uint64_t lastResolveTryMoment = 0UL;
-IPAddress ntpServerIp = {0, 0, 0, 0};
-static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
-static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
-static CHSV dawnColorMinus2 = CHSV(0, 0, 0);
-static CHSV dawnColorMinus3 = CHSV(0, 0, 0);
-static CHSV dawnColorMinus4 = CHSV(0, 0, 0);
-static CHSV dawnColorMinus5 = CHSV(0, 0, 0);
-static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
 
 void timeTick()
 {
