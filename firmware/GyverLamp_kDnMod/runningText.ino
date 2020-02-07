@@ -157,7 +157,7 @@ bool printTime(uint32_t thisTime, bool onDemand, bool ONflag, bool isManual, boo
 
     if(lampMode == MODE_DEMO && GlobalBrightness>0)
       FastLED.setBrightness(GlobalBrightness);
-    else
+    else if(lampMode != MODE_ALARMCLOCK)
       FastLED.setBrightness(getBrightnessForPrintTime(thisTime, ONflag));
     delay(1);
 
