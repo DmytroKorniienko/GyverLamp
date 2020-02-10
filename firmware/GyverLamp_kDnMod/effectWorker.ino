@@ -1,48 +1,39 @@
-//#define NEWYEAR_MESSAGE // вывод поздравления с новым годом и обратным отсчетом
-
-static timerMinim tmTimeMoveStep(70); // скорость движения времени, в миллисекундах - меньше == быстрее
-static timerMinim tmTimeCheckTimeout(10000); // период проверки времени (а дальше вывод в соответствии с расписанием), одного раза в десять секунд - достаточно, приоритет имеет вывод текста
-                                             // для вывода текущего времени - стандартные настройки в константах PRINT_TIME
-
-
 #ifdef NEWYEAR_MESSAGE
-static timerMinim tmStringMoveStep(100); // скорость движения текста, в миллисекундах - меньше == быстрее
-static timerMinim tmStringMoveTimeout(60000*5); // *N минут - периодичность вывода новогоднего отсчета/поздравления
-
-char *msg1 = "До нового года осталось %d %s";
-char *msg2 = "C новым 2020 годом!";
-char message[256] = "До нового года осталось %d %s."; // буфер на 256 символов
-
 void NewYearMessagePrint()
 {
-      #ifdef NEWYEAR_MESSAGE
       if(tmStringMoveTimeout.isReadyManual()){
-        float calc;
-        time_t currentLocalTime = localTimeZone.toLocal(timeClient.getEpochTime());
-        time_t nyLocalTime = localTimeZone.toLocal(1577836800); // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/
-        calc = nyLocalTime - currentLocalTime; // unix_diff_time
-        if(calc<0) {
-          sprintf_P(message, msg2);
-        } else if(calc<300){
-          sprintf_P(message, msg1, (int)calc, "секунд");
-        } else if(calc/60<60){
-          sprintf_P(message, msg1, (int)calc/60, "минут");
-        } else if(calc/60/60<60){
-          sprintf_P(message, msg1, (int)calc/60/60, "часов");
-        } else {
-          sprintf_P(message, msg1, (int)calc/60/60/24, "дня");
+        if(!isStrPrepated){
+          time_t currentLocalTime = localTimeZone.toLocal(timeClient.getEpochTime());
+          time_t nyLocalTime = localTimeZone.toLocal(NEWYEAR_UNIXDATETIME);
+          calc = nyLocalTime - currentLocalTime; // unix_diff_time
+          if(calc<0) {
+            sprintf_P(strMessage, msg2, year(currentLocalTime));
+          } else if(calc<300){
+            sprintf_P(strMessage, msg1, (int)calc, "секунд");
+          } else if(calc/60<60){
+            sprintf_P(strMessage, msg1, (int)(calc/60), "минут");
+          } else if(calc/60/60<60){
+            sprintf_P(strMessage, msg1, (int)(calc/60/60), "часов");
+          } else {
+            sprintf_P(strMessage, msg1, (int)(calc/60/60/24), "дня");
+          }
+          isStrPrepated = true;
+          #ifdef GENERAL_DEBUG
+          LOG.printf_P(PSTR("Prepared message: %s\n"), strMessage);
+          #endif
         }
         
         if(tmStringMoveStep.isReadyManual()){
-          if(!fillStringManual(message, CRGB::White, false)) // смещаем
+          if(!fillStringManual(strMessage, CRGB::White, false)) // смещаем
             tmStringMoveStep.reset();
-          else
+          else {
             tmStringMoveTimeout.reset();
+            isStrPrepated = false;
+          }
         } else {
-          fillStringManual(message, CRGB::White, true);
+          fillStringManual(strMessage, CRGB::White, true); // выводим на том же месте
         }
       }
-      #endif
 }
 #endif
 

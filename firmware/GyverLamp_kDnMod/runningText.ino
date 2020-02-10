@@ -81,15 +81,15 @@ bool fillString(const char* text, CRGB letterColor)
 
 bool printTime(uint32_t thisTime, bool onDemand, bool ONflag, bool isManual, bool isStopped) // периодический вывод времени бегущей строкой; onDemand - по требованию, вывод текущего времени; иначе - вывод времени по расписанию; isManual == true (ручной режим)
 {
-  #if defined(USE_NTP) && defined(PRINT_TIME)               // вывод, только если используется синхронизация времени и если заказан его вывод бегущей строкой
+  #ifdef USE_NTP                                            // вывод, только если используется синхронизация времени
 
-  if(isWifiOffMode) return false; // при отключенном WiFi - сразу на выход
+  //if(isWifiOffMode) return false; // при отключенном WiFi - сразу на выход
 
-  if (espMode != 1U || !ntpServerAddressResolved || !timeSynched)     // вывод только в режиме WiFi клиента и только, если имя сервера времени разрезолвлено
-  {
-    showWarning(CRGB::Red, 4000U, 500U);                    // мигание красным цветом 4 секунды - смена рабочего режима лампы, перезагрузка
-    return false;
-  }
+  //if ((espMode != 1U || !ntpServerAddressResolved || !timeSynched) && (!isWifiOffMode))     // вывод только в режиме WiFi клиента и только, если имя сервера времени разрезолвлено
+  //{
+  //  showWarning(CRGB::Red, 4000U, 500U);                    // мигание красным цветом 4 секунды
+  //  return false;
+  //}
 
   CRGB letterColor = CRGB::Black;
   bool needToPrint = false;
@@ -152,8 +152,11 @@ bool printTime(uint32_t thisTime, bool onDemand, bool ONflag, bool isManual, boo
 
   if ((needToPrint && thisTime != lastTimePrinted) || onDemand)
   {
-    char stringTime[10U];                                   // буффер для выводимого текста, его длина должна быть НЕ МЕНЬШЕ, чем длина текста + 1
-    sprintf_P(stringTime, PSTR("-> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));
+    char stringTime[15U];                                   // буффер для выводимого текста, его длина должна быть НЕ МЕНЬШЕ, чем длина текста + 1
+    if(!ntpServerAddressResolved || !timeSynched)
+      sprintf_P(stringTime, PSTR("!syn -> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));
+    else
+      sprintf_P(stringTime, PSTR("-> %u:%02u"), (uint8_t)((thisTime - thisTime % 60U) / 60U), (uint8_t)(thisTime % 60U));    
 
     if(lampMode == MODE_DEMO && GlobalBrightness>0)
       FastLED.setBrightness(GlobalBrightness);
@@ -264,6 +267,8 @@ void drawLetter(uint16_t letter, int16_t offset, CRGB letterColor)
       thisByte = getFont(letter, i);
     }
 
+    //if(textinverse) thisByte=~thisByte;
+
     for (uint16_t j = 0; j < LET_HEIGHT; j++)
     {
       bool thisBit = MIRR_H
@@ -272,11 +277,11 @@ void drawLetter(uint16_t letter, int16_t offset, CRGB letterColor)
 
       if(TEXT_DIRECTION){
         if(MIRR_V){
-          drawPixelXY(offset - 1, TEXT_HEIGHT + j, 0x000000); // очистить предыдущий
+          drawPixelXY(offset - 1, TEXT_HEIGHT + j, (textinverse ? letterColor : CRGB::Black)); // очистить предыдущий
         }
       } else {
         if(MIRR_V){
-          drawPixelXY(j + TEXT_HEIGHT, offset - 1, 0x000000); // очистить предыдущий
+          drawPixelXY(j + TEXT_HEIGHT, offset - 1, (textinverse ? letterColor : CRGB::Black)); // очистить предыдущий
         }
       }
       
@@ -285,22 +290,22 @@ void drawLetter(uint16_t letter, int16_t offset, CRGB letterColor)
       {
         if (thisBit)
         {
-          drawPixelXY(offset + i, TEXT_HEIGHT + j, letterColor);
+          drawPixelXY(offset + i, TEXT_HEIGHT + j, (!textinverse ? letterColor : CRGB::Black));
         }
         else
         {
-          drawPixelXY(offset + i, TEXT_HEIGHT + j, 0x000000);
+          drawPixelXY(offset + i, TEXT_HEIGHT + j, (textinverse ? letterColor : CRGB::Black));
         }
       }
       else
       {
         if (thisBit)
         {
-          drawPixelXY(j + TEXT_HEIGHT, offset + i, letterColor);
+          drawPixelXY(j + TEXT_HEIGHT, offset + i, (!textinverse ? letterColor : CRGB::Black));
         }
         else
         {
-          drawPixelXY(j + TEXT_HEIGHT, offset + i, 0x000000); // drawPixelXY(i, offset + TEXT_HEIGHT + j, 0x000000);
+          drawPixelXY(j + TEXT_HEIGHT, offset + i, (textinverse ? letterColor : CRGB::Black));
         }
       }
     }

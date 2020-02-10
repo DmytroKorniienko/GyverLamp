@@ -3,7 +3,7 @@
 
 void timeTick()
 {
-  if (espMode == 1U)
+  if (espMode == 1U && !isWifiOffMode) // без WiFi - на выход
   {
     if (timeTimer.isReady()) // проверяем в интернете изредка, остальное делаем в основном цикле
     {
@@ -78,8 +78,11 @@ void timeTick()
         FastLED.show();
         
         #ifdef PRINT_ALARM_TIME
-        if(printAlarmTimer.isReady())
+        if(printAlarmTimer.isReady()){
+          textinverse = INVERSE_ALARM_TIME;
           printTime(thisTime, true, ONflag, false, false);              // проверка текущего времени и его вывод (если заказан и если текущее время соответстует заказанному расписанию вывода)
+          textinverse = false;                                          // отключить инвертирование, если было        
+        }
         #endif
 
         dawnFlag = true;

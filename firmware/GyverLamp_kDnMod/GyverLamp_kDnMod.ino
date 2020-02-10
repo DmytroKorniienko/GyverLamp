@@ -29,7 +29,7 @@ void setup()
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
   FastLED.clear();                                            // очистка матрицы
-  leds[1] = CRGB::Red; FastLED.show(); delay(1000);           // красный светодиод инициализации "Включение в сеть" (второй по порядку)
+  leds[getPixelNumber(0, 1)] = CRGB::Red; FastLED.show(); delay(1000);            // красный светодиод инициализации "Включение в сеть" (второй по порядку)
 
   #ifdef VERTGAUGE
   GaugeSetup();
@@ -69,12 +69,13 @@ void setup()
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
   touch.setTimeout(BUTTON_TIMEOUT);
     #if ESP_RESET_ON_START
-    leds[2] = CRGB::Green; delay(1); FastLED.show();        // зеленый светодиод инициализации - кнопка присутствует (третий светодиод)
+    leds[getPixelNumber(0, 2)] = CRGB::Green; delay(1); FastLED.show();             // зеленый светодиод инициализации - кнопка присутствует (третий светодиод)
+    buttonTick();
     delay(1000);                                            // ожидание инициализации модуля кнопки ttp223 (по спецификации 250мс)
     
-    if (digitalRead(BTN_PIN)+((PULL_MODE==HIGH_PULL)?-1:0)) // если кнопка нажата то будет осуществлена конфигурация
-    {
-      leds[3] = CRGB::Blue; delay(1); FastLED.show();       // синий светодиод инициализации - сброс WIFI (четвертый светодиод)
+    //if (digitalRead(BTN_PIN)+((PULL_MODE==HIGH_PULL)?-1:0)) // если кнопка нажата то будет осуществлена конфигурация
+    if (touch.state()) {
+      leds[getPixelNumber(0, 3)] = CRGB::Blue; delay(1); FastLED.show();           // синий светодиод инициализации - сброс WIFI (четвертый светодиод)
       wifiManager.resetSettings();                          // сброс сохранённых SSID и пароля при старте с зажатой кнопкой, если разрешено
       #ifdef GENERAL_DEBUG
       LOG.println(F("Init: Настройки WiFiManager сброшены"));
@@ -134,15 +135,18 @@ void setup()
       #ifdef GENERAL_DEBUG
       LOG.printf_P(PSTR("Init: Подключение к WiFi сети: %s\n"), WiFi.SSID().c_str());
       #endif
-      while (WiFi.status() != WL_CONNECTED){                                                // проверка на устойчивое подключеное соединение
-        leds[attempts] = CRGB(0, 0, 16 + attempts * 4); delay(1); FastLED.show();           // отображение уровня мощности n 
-        if (power > 20.5) {power == 20.5;}                                                  // макс +20,5 дБм
-        #ifdef GENERAL_DEBUG
-        LOG.print(" Мощность передачи: "); LOG.print(power); LOG.println("dBm "); 
-        #endif
+      while (WiFi.status() != WL_CONNECTED) {                                               // проверка на устойчивое подключеное соединение
+        leds[getPixelNumber(0, attempts)] = CRGB(0, 0, 8 + attempts * 8); delay(1); FastLED.show();           // отображение уровня мощности n
+        if (power > 20.5) {
+          power == 20.5; // макс +20,5 дБм
+        }
+      #ifdef GENERAL_DEBUG
+      LOG.print("WiFi: Мощность передачи: "); LOG.print(power); LOG.println("dBm ");
+      #endif
+
         WiFi.setOutputPower(power);                                                         // установка мощности передатчика
         power += 1.3667; attempts++;                                                        // увеличение мощности для следующего шага
-        delay(2000);                                                                        // задержка перед увеличением мощности
+        delay(1000);                                                                        // задержка перед увеличением мощности
         if (attempts > 15){
           isWifiOffMode = true;
           showWarning(CRGB::Red, 3000U, 500U);                                              // мигание красным цветом 0,5 секунды (1 раз) - не удалось подключится к WiFi сети, продолжаем без WiFi
@@ -180,20 +184,20 @@ void setup()
           delay(2000);
           if (ssid == ""){                                                                                          // сеть не выбрана, пароль не введен 
             wifiManager.resetSettings();                                                                            // обнуление настроек WiFi
-            showWarning(CRGB::Orange, 3000U, 500U);                                                                 // мигание оранжевым цветом 0,5 секунды (3 раза) - сеть не выбрана
-            #ifdef GENERAL_DEBUG
-            LOG.println(F("Init: Cеть не выбрана, пароль не введен (((")); delay(2000);
-            #endif
-            ESP.restart();                                                                                          // перезагрузка
+            if (WiFi.status() == WL_CONNECT_FAILED){                                                                // если была неудачная попытка входа в сеть (сеть прусутствует, но роутер по какой-то причине не принял клиента) 
+              showWarning(CRGB::Yellow, 3000U, 500U);                                                                 // мигание желтым цветом 0,5 секунды (3 раза) - сеть WiFi найдена, но вход в сеть не осуществлен
+              #ifdef GENERAL_DEBUG
+              LOG.println(F("Init: Ошибка входа в сеть!")); delay(2000);
+              #endif
+            } else {
+              showWarning(CRGB::Orange, 3000U, 500U);                                                                 // мигание оранжевым цветом 0,5 секунды (3 раза) - сеть не выбрана
+              #ifdef GENERAL_DEBUG
+              LOG.println(F("Init: Cеть не выбрана, пароль не введен (((")); delay(2000);
+              #endif
+              ESP.restart();                                                                                          // перезагрузка
+            }
           }
-          if (WiFi.status() == WL_CONNECT_FAILED){                                                                  // если была неудачная попытка входа в сеть (сеть прусутствует, но роутер по какой-то причине не принял клиента) 
-            wifiManager.resetSettings();                                                                            // обнуление настроек WiFi
-            showWarning(CRGB::Yellow, 3000U, 500U);                                                                 // мигание желтым цветом 0,5 секунды (3 раза) - сеть WiFi найдена, но вход в сеть не осуществлен
-            #ifdef GENERAL_DEBUG
-            LOG.println(F("Init: Ошибка входа в сеть!")); delay(2000);
-            #endif
-            ESP.restart();                                                                                          // перезагрузка
-          }
+
           delete captivePortalManager;                                                                              // сброс настроек всплывающего экрана
           captivePortalManager = NULL;                                                                              //
           #ifdef GENERAL_DEBUG
@@ -237,7 +241,7 @@ void setup()
           LOG.println();
           LOG.println(F("Init: Диагностика подключения..."));                                                       // если конфигурация устройства не прошла 
           #endif
-          FastLED.clear(); FastLED.setBrightness(BRIGHTNESS); fillAll(CRGB(32,0,0)); delay(1); FastLED.show();      // вся матрица темно красная = режим аварийной конфигурации  
+          FastLED.clear(); FastLED.setBrightness(BRIGHTNESS); fillAll(CRGB(16, 0, 0)); delay(1); FastLED.show();    // вся матрица темно красная = режим аварийной конфигурации
   
           if (WiFi.status() != WL_CONNECTED){                                                                       // если подключение к WiFi не установлено
             #ifdef GENERAL_DEBUG
@@ -246,7 +250,7 @@ void setup()
             delay(2000);
             attempts = 1; power = 0;
             while (WiFi.status() != WL_CONNECTED){                                                                  // старт цикла попыток подключения
-              leds[attempts] = CRGB::White; delay(1); FastLED.show();                                               // отображение инициализации попытки n
+              leds[getPixelNumber(0, attempts)] = CRGB(32,32,32); delay(1); FastLED.show();                         // отображение инициализации попытки n
               int myNet;
               numSsid = WiFi.scanNetworks();                                                                        // сканирование сетей на присутствие требуемой
               for (thisNet = 0; thisNet < numSsid; thisNet++) {
@@ -259,16 +263,16 @@ void setup()
               LOG.print("Попытка: "); LOG.print(attempts);
               #endif
               WiFi.mode(WIFI_OFF); delay(3000);                                                                     // отключение модуля WiFi/пауза
-              leds[attempts] = CRGB::Yellow; delay(1); FastLED.show();                                              // отображение режима попытки n 
+              leds[getPixelNumber(0, attempts)] = CRGB(32,32,0); delay(1); FastLED.show();                          // отображение режима попытки n
               WiFi.mode(WIFI_STA);                                                                                  // включение модуля WiFi в режиме клиента
               if (power > 20.5) {power == 20.5;}                                                                    // ограничение уровня мощности передатчика. макс 20,5 дБм
               WiFi.setOutputPower(power);
               #ifdef GENERAL_DEBUG
-              LOG.print(" Мощность передачи: "); LOG.print(power); LOG.print("dBm "); 
+              LOG.print("WiFi: Мощность передачи: "); LOG.print(power); LOG.print("dBm ");
               #endif
               WiFi.begin(ssid, pass);                                                                               // попытка входа в сеть
               #ifdef GENERAL_DEBUG
-              LOG.print(" Статус: "); LOG.print(enumConnectionStatus[WiFi.status()]);                               // вывод статуса подключения 
+              LOG.print("WiFi: Статус: "); LOG.print(enumConnectionStatus[WiFi.status()]);                          // вывод статуса подключения
               LOG.print(" Канал: "); LOG.print(WiFi.channel());                                                     // вывод канала подключения 
               LOG.print(" Сигнал: "); LOG.print(WiFi.RSSI()); LOG.print("dBm ");                                    // вывод уровня сигнала
               #endif
