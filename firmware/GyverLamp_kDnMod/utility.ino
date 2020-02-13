@@ -135,8 +135,6 @@ void GaugeSetup()
 
 void GaugeShowVertical() {
   if(!startButtonHolding) return;
-  if(lampMode == MODE_DEMO && !startButtonHolding)
-    modes[currentMode].Brightness = storeEffBrightness;
   
   switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
     case 1:
@@ -180,8 +178,6 @@ void GaugeShowVertical() {
 
 void GaugeShowHorizontal() {
   if(!startButtonHolding) return;
-  if(lampMode == MODE_DEMO && !startButtonHolding)
-    modes[currentMode].Brightness = storeEffBrightness;
   
   switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
     case 1:

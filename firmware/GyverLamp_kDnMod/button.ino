@@ -226,8 +226,13 @@ void buttonTick()
     isFirstHoldingPress = true;
     switch (touch.getHoldClicks()){
       case 0U: {
-        if(!numHold)
+        if(!numHold){
           numHold = 1;
+          if(lampMode==MODE_DEMO) {
+            storeEffBrightness = modes[currentMode].Brightness; // запоминаем яркость эффекта, которая была изначально
+            modes[currentMode].Brightness = GlobalBrightness; // перенакрываем глобальной
+          }
+        }
         break;
       }
       case 1U: {
@@ -269,6 +274,7 @@ void buttonTick()
     #endif
     if (numHold != 0) {
       tmNumHoldTimer.reset();
+      tmDemoTimer.reset(); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
       //loadingFlag = true;
     }
     
@@ -287,6 +293,10 @@ void buttonTick()
       case 3:
         modes[currentMode].Scale = constrain(modes[currentMode].Scale + (modes[currentMode].Scale / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255);
         break;
+    }
+
+    if(numHold==1){
+        FastLED.setBrightness(modes[currentMode].Brightness);
     }
     
     settChanged = true;
@@ -328,6 +338,10 @@ void buttonTick()
       FastLED.setBrightness(GlobalBrightness);
     else
       FastLED.setBrightness(modes[currentMode].Brightness);
+
+    // возвращаем сохраненную яркость, после регулировки глобальной яркости для демо
+    if(lampMode == MODE_DEMO)
+      modes[currentMode].Brightness = storeEffBrightness;
   }
 
   if (tmNumHoldTimer.isReadyManual() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
