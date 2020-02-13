@@ -248,7 +248,7 @@ void rainbowDiagonalRoutine(char *param)
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
       float twirlFactor = 3.0F * (modes[EFF_RAINBOW_DIAG].Scale / 100.0F);      // на сколько оборотов будет закручена матрица, [0..3]
-      CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / HEIGHT * i + j * twirlFactor) * ((float)255 / maxDim)), 255, 255);
+      CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)maxDim)), 255, 255);
       drawPixelXY(i, j, thisColor);
     }
   }
@@ -257,7 +257,7 @@ void rainbowDiagonalRoutine(char *param)
 // ------------- цвета -----------------
 void colorsRoutine(char *param)
 {
-  if (loadingFlag)
+  //if (loadingFlag)
   {
     hue += modes[EFF_COLORS].Scale;
 
@@ -271,10 +271,10 @@ void colorsRoutine(char *param)
 // ------------- цвет ------------------
 void colorRoutine(char *param)
 {
-  if (loadingFlag)
+  //if (loadingFlag)
   {
     loadingFlag = false;
-    FastLED.clear();
+    //FastLED.clear();
 
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {

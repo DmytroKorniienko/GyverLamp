@@ -41,7 +41,7 @@ void buttonTick()
       else
         FastLED.setBrightness(modes[currentMode].Brightness);
       ONflag = true;
-      tmUserTimer.reset(); // момент включения для таймаута в DEMOTIME
+      tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
       changePower();
       #ifdef GENERAL_DEBUG
       LOG.printf_P(PSTR("Demo mode: %d, storeEffect: %d\n"), currentMode, storeEffect);
@@ -323,35 +323,15 @@ void buttonTick()
       MqttManager::needToPublish = true;
     }
     #endif
+
+    if(lampMode==MODE_DEMO && GlobalBrightness>0)
+      FastLED.setBrightness(GlobalBrightness);
+    else
+      FastLED.setBrightness(modes[currentMode].Brightness);
   }
 
   if (tmNumHoldTimer.isReadyManual() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
       numHold = 0;
   }
-    
-  if(tmUserTimer.isReady() && (lampMode == MODE_DEMO)){
-    for(byte i = 25; i>1; i-=1){
-      fader(30);
-      FastLED.delay(33);
-    }
-          
-    if(RANDOM_DEMO)
-        currentMode = random(0, MODE_AMOUNT)%EFF_WHITE_COLOR; // EFF_WHITE_COLOR скипаем
-      else
-        currentMode=(currentMode+1)%EFF_WHITE_COLOR; // EFF_WHITE_COLOR скипаем и идем по наростанию
-    storeEffBrightness = modes[currentMode].Brightness;
-    
-    loadingFlag = true;
-    
-    #ifdef GENERAL_DEBUG
-    LOG.printf_P(PSTR("%s Demo mode: %d, storeEffect: %d\n"),(RANDOM_DEMO?"Random":"Seq") , currentMode, storeEffect);
-    #endif
-  }
-   
-  if (ONflag && !dawnFlag)
-    if(lampMode==MODE_DEMO && GlobalBrightness>0 && !startButtonHolding)
-      FastLED.setBrightness(GlobalBrightness);
-    else
-      FastLED.setBrightness(modes[currentMode].Brightness);
 }
 #endif

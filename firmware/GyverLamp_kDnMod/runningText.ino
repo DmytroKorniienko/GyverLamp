@@ -73,7 +73,9 @@ bool fillString(const char* text, CRGB letterColor)
       offset = (MIRR_V ? 0 : WIDTH);
       return true;
     }
-    FastLED.show();    
+
+    //if(!ONflag) // только для случая вывода времени при выключенном состоянии
+      FastLED.show();    
   }
 
   return false;

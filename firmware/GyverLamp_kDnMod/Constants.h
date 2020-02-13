@@ -265,7 +265,13 @@ const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
 
 //-----------------------------------------------------------------
 // --- ИНИЦИАЛИЗАЦИЯ ОБЪЕКТОВ ----------
+// можно закомментировать, в случае если нужно сэкономить память
+#define USELEDBUF
 CRGB leds[NUM_LEDS];
+#ifdef USELEDBUF
+CRGB ledsbuff[NUM_LEDS];
+#endif
+
 WiFiManager wifiManager;
 WiFiServer wifiServer(ESP_HTTP_PORT);
 WiFiUDP Udp;
@@ -365,8 +371,14 @@ static bool setDirectionTimeout = false;                    // флаг: нач�
 static bool isFirstHoldingPress = false;                    // флаг: только начали удерживать?
 static timerMinim tmNumHoldTimer(NUMHOLD_TIME);             // таймаут удержания кнопки в мс
 #define RANDOM_DEMO           (1)                           // 0,1 - последовательный (0)/рандомный (1) выбор режима демо
-static timerMinim tmUserTimer(30*1000);                     // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
+static timerMinim tmDemoTimer(30*1000);                     // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
 static timerMinim tmChangeDirectionTimer(NUMHOLD_TIME);     // таймаут смены направления увеличение-уменьшение при удержании кнопки
+// длительность всего фейдера в мс
+#define FADERTIMEOUT 1000
+// длительность шага фейдера, мс
+#define FADERSTEPTIME 50
+static timerMinim tmFaderTimeout(0);
+static timerMinim tmFaderStepTime(FADERSTEPTIME);
 byte storeEffect = 1;
 byte storeMode = MODE_NORMAL;
 

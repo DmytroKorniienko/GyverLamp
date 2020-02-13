@@ -1,5 +1,7 @@
 uint32_t effTimer;
 byte ind;
+boolean isFaderOn = false;
+byte faderStep = 1;
 
 void effectsTick()
 {
@@ -12,27 +14,70 @@ void effectsTick()
   {
     if (ONflag)
     {
-      if(millis() - effTimer >= modes[currentMode].Speed){
+      if(millis() - effTimer >= modes[currentMode].Speed && !isFaderOn){
         EFFECTS_ARR[currentMode].func(EFFECTS_ARR[currentMode].param);
         effTimer = millis();
       }
 
+      if(!tmFaderTimeout.isReady()){
+        if(isFaderOn && tmFaderStepTime.isReady()) {
+          #ifdef GENERAL_DEBUG
+          //LOG.printf_P(PSTR("leds[1]=%d %d %d\n"),leds[1].red,leds[1].green,leds[1].blue);
+          #endif
+          faderStep++;
+          float chVal = ((float)GlobalBrightness*FADERSTEPTIME)/FADERTIMEOUT;
+          for(int led = 0 ; led < NUM_LEDS ; led++ ) {
+            //leds[led]/=((faderStep>5)?2:1);
+            leds[led].subtractFromRGB((uint8_t)(chVal*faderStep*0.33));
+          }
+        }
+      } else { // время на фейдер вышло
+        tmFaderTimeout.setInterval(0); // отключить до следующего раза, также переключаем эффект на новый, заодно запоминаем яркость текущего эффекта
+        if(RANDOM_DEMO)
+            currentMode = random(0, MODE_AMOUNT)%EFF_WHITE_COLOR; // EFF_WHITE_COLOR скипаем
+          else
+            currentMode=(currentMode+1)%EFF_WHITE_COLOR; // EFF_WHITE_COLOR скипаем и идем по наростанию
+        storeEffBrightness = modes[currentMode].Brightness;
+        loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
+        isFaderOn = false;
+        faderStep = 1;
+        #ifdef GENERAL_DEBUG
+        LOG.printf_P(PSTR("%s Demo mode: %d, storeEffect: %d\n"),(RANDOM_DEMO?"Random":"Seq") , currentMode, storeEffect);
+        #endif
+        EFFECTS_ARR[currentMode].func(EFFECTS_ARR[currentMode].param); // отрисовать новый эффект
+      }
+
+      #ifdef USELEDBUF
+      memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
+      #endif
+
+      if(tmDemoTimer.isReady() && (lampMode == MODE_DEMO)){
+        tmFaderTimeout.setInterval(FADERTIMEOUT); // взводим таймер фейдера
+        tmFaderTimeout.reset();
+        isFaderOn = true;
+        faderStep = 1;
+      }
+      
       #ifdef NEWYEAR_MESSAGE
       NewYearMessagePrint(); // отрабатывает только во включенном состоянии
-      #endif
-      
-      #ifdef VERTGAUGE
-        if(VERTGAUGE==1)
-          GaugeShowVertical();
-        else if(VERTGAUGE==2)
-          GaugeShowHorizontal();
       #endif
     }
 
     onOffTimePrint();
+
+    #ifdef VERTGAUGE
+      if(VERTGAUGE==1 && ONflag)
+        GaugeShowVertical();
+      else if(VERTGAUGE==2 && ONflag)
+        GaugeShowHorizontal();
+    #endif
     
-    if(ONflag)
+    if(ONflag){
       FastLED.show();
+      #ifdef USELEDBUF
+      memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
+      #endif
+    }
   }
 }
 

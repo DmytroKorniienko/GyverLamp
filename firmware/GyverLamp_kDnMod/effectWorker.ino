@@ -15,7 +15,15 @@ void NewYearMessagePrint()
           } else if(calc/60/60<60){
             sprintf_P(strMessage, msg1, (int)(calc/60/60), "часов");
           } else {
-            sprintf_P(strMessage, msg1, (int)(calc/60/60/24), "дня");
+            byte calcN=(calc/60/60/24)%10; // остаток от деления на 10
+            String str;
+            if(calcN>=2 && calcN<=4)
+              str = "дня";
+            else if(calc<>11 && calcN=1)
+              str = "день";
+            else
+              str = "дней";
+            sprintf_P(strMessage, msg1, (int)(calc/60/60/24), str.c_str());
           }
           isStrPrepated = true;
           #ifdef GENERAL_DEBUG

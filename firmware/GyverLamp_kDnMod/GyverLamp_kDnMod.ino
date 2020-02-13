@@ -153,7 +153,7 @@ void setup()
           #ifdef GENERAL_DEBUG
           LOG.println(""); LOG.println("Init: Подключение не выполнено. Работа без сети.");
           #endif
-          WiFi.mode(WIFI_OFF);                                                              // выхлючить WiFi - раьота лампы без сети
+          WiFi.mode(WIFI_OFF);                                                              // выключить WiFi - работа лампы без сети
         }
       }
     }
@@ -364,6 +364,12 @@ void setup()
   randomSeed(micros());
   changePower();
   loadingFlag = true;
+
+  //lampMode = MODE_DEMO; // для тестирования и отладки :) включаю принудительно в демо
+  #ifndef ESP_USE_BUTTON
+  if(isWifiOffMode)
+    lampMode = MODE_DEMO; // запуск в демо-режиме если используется без кнопки и без сети
+  #endif
 }
 
 
