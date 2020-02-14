@@ -64,6 +64,10 @@ void setup()
   #endif
 
   // КНОПКА
+  #ifndef ESP_USE_BUTTON
+  if (WiFi.SSID().length() == 0 && buttonEnabled) needconfigure = true;
+  #endif
+ 
   #ifdef ESP_USE_BUTTON
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
@@ -158,7 +162,12 @@ void setup()
       }
     }
     else {                                                
-      if (!&buttonEnabled || needconfigure){                                                // Проверка. Требуется ли дополнительная конфигурация?
+      if (buttonEnabled && needconfigure){                                                  // Проверка. Требуется ли дополнительная конфигурация?
+        #ifndef ESP_USE_BUTTON
+        buttonEnabled = !buttonEnabled;                                                     // отключаем кнопку, триггерная логика, после ресета - включим, после следующего - снова выключим и т.д.
+        EepromManager::SaveButtonEnabled(&buttonEnabled);
+        delay(1000);
+        #endif
         if (WiFi.SSID().length()== 0){                                                      // если настройки были сброшены, то запускается процедура подключения через AP
           ESP.wdtDisable(); delay (100); ESP.wdtEnable(ESP_CONF_TIMEOUT * 2);               // установка дежурного счетчика на заведомо большее время ввода конфигурации
           FastLED.clear(); FastLED.setBrightness(BRIGHTNESS); fillAll(CRGB(0,0,32)); delay(1); FastLED.show();   // вся матрица темно синяя = режим конфигурации        

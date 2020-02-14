@@ -172,14 +172,14 @@ bool printTime(uint32_t thisTime, bool onDemand, bool ONflag, bool isManual, boo
 
     if(!isManual)
       while (!fillString(stringTime, letterColor)) {
-      #ifdef ESP_USE_BUTTON
-      if (buttonEnabled){
-        buttonTick();
-      }
-      #endif
+        #ifdef ESP_USE_BUTTON
+        if (buttonEnabled){
+          buttonTick();
+        }
+        #endif
         delay(1);
         ESP.wdtFeed();
-        }
+    }
     else
        if(!fillStringManual(stringTime, letterColor, isStopped)){
          return false;

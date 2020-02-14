@@ -78,6 +78,14 @@ void buttonTick()
   // однократное нажатие
   if (clickCount == 1U)
   {
+    #ifdef ONETOUCH_CLOCK     
+    //if (!osd_printCurrentTime(CRGB::White)){}          // попытка напечатать время. Если не получается или текст уже на экране, то переходим ко включению
+    #endif  
+
+    #ifdef ONETOUCH_CLOCK
+    printTime(thisTime, true, ONflag, false, false); // оригинальный вариант вывода времени
+    #endif
+    
     if(!ONflag){
       numHold = 0;
       lampMode = MODE_NORMAL;

@@ -13,7 +13,7 @@
 
 #define ESP_MODE              (1U)                          // 0U - WiFi точка доступа, 1U - клиент WiFi (подключение к роутеру)
 uint8_t espMode = ESP_MODE;                                 // ESP_MODE может быть сохранён в энергонезависимую память и изменён в процессе работы лампы без необходимости её перепрошивки
-#define BRIGHTNESS            (255U)                        // стандартная маскимальная яркость (0-255)
+#define BRIGHTNESS            (255U)                        // стандартная максимальная яркость (0-255)
 
 // ============= НАСТРОЙКИ =============
 // --- ESP -----------------------------
@@ -360,6 +360,8 @@ uint8_t FavoritesManager::FavoriteModes[MODE_AMOUNT]; // static = {0, 0, 0, 0, 0
 uint32_t FavoritesManager::nextModeAt = 0UL;
 
 bool CaptivePortalManager::captivePortalCalled = false;
+
+#define ONETOUCH_CLOCK // печать времени по однократному нажатию (Palpalych)
 
 byte GlobalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 byte numHold = 0;

@@ -64,6 +64,8 @@ void effectsTick()
     }
 
     onOffTimePrint();
+    
+    //osd_Tick(); // вывод сообщений по методу Palpalych https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/page-26#post-26788
 
     #ifdef VERTGAUGE
       if(VERTGAUGE==1 && ONflag)
@@ -72,7 +74,7 @@ void effectsTick()
         GaugeShowHorizontal();
     #endif
     
-    if(ONflag){
+    if(ONflag || !osd_textDone()){
       FastLED.show();
       #ifdef USELEDBUF
       memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
