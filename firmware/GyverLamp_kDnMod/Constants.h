@@ -239,6 +239,63 @@ boolean isStrPrepated = false;
 #define FADE_OUT_SPEED        (70U)                         // скорость затухания
 // ------------- огонь -----------------
 #define SPARKLES              (1U)                          // вылетающие угольки вкл выкл
+
+#define FIRE_UNIVERSE                        // универсальный огонь 2-в-1 Цветной+Белый
+#define FIRE_WHITEVALUE           (100U)     // значение регулятора "Масштаб" при котором отображается белое пламя #(100U)
+#define FIRE_MASKOFFSET           (4U)       // сдвиг маски огня относительно края. для того, чтобы разместить очаг по центру = FIRE_FLAMEWIDTH/2 #(4U)
+#define FIRE_CORESHIFT            (8U)       // допустимый сдвиг очага в пикселях относительно его центральной позиции #(4U)
+#define FIRE_CORESTRENGTH         (12U)      // стойкость очага относительно напора ветра (1 ... , 0 = отключить колыхание) #(3U)
+#define FIRE_CORERESIST           (8U)       // устойчивость очага относительно порывов ветра (1 ... ) #(2U)
+#define FIRE_CORESPEED            (1U)       // скорость сдвига очага относительно порывов ветра (1 ... ) #(1U)
+#define FIRE_FLAMESHIFT           (1U)       // допустимый сдвиг пламени относительно очага #(1U)
+#define FIRE_FLAMESTRENGTH        (2U)       // стойкость пламени относительно напора ветра (1 ... , 0 = отключить колыхание) #(2U)
+#define FIRE_FLAMERESIST          (1U)       // устойчивость пламени относительно порывов ветра (1 ... ) #(1U)
+#define FIRE_FLAMESPEED           (1U)       // скорость сдвига пламени относительно порывов ветра (1 ... ) #(1U)
+#define FIRE_COREACTIVITY         (96U)      // интенсивность горения / мерцание горящей зоны (0 ... 255) #(80U)
+#define FIRE_PLUMEACTIVITY        (31U)      // интенсивность языков пламени (0 ... 255) #(31U)
+#define FIRE_PLUMEFREQUENCY       (13U)      /* частотаа языков пламени (0 ... 255) #(13U)
+                                             // соотношение FIRE_PLUMEACTIVITY / FIRE_PLUMEFREQUENCY дает приблизительную высоту языка пламени
+                                             // 2 эти параметра лучше выбирать из натуральных чисел и чтобы в остатке было примерно 0,5 */
+#define FIRE_VOLUMESEED           (12U)      // величина зерна огня #(16U)                              
+#define FIRE_HUESEED              (12U)      // разница в оттенке соседних зерен огня #(8U)
+
+
+#define FIRE_SPARKLES             (true)     // вылетающие искры вкл/выкл
+#define FIRE_SPARKSBRIGHT         (200U)     // первоначальная яркость искр (255 ... 0) #(200U)
+#define FIRE_EVERYNSPARK          (64U)      // только каждая единичная из указанных искр будет выводится (0 ... 255) #(64U)
+#define FIRE_SPARKSTRENGTH        (3U)       // стойкость искр относительно напора ветра (1 ... , 0 = отключить колыхание) #(3U)
+// -------- водо/огне/лава/радуга/хренопад --------
+extern const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
+  CRGB::Black,
+  CRGB::DarkSlateGray,
+  CRGB::DimGray,
+  CRGB::LightSlateGray,
+
+  CRGB::DimGray,
+  CRGB::DarkSlateGray,
+  CRGB::Silver,
+  CRGB::DarkCyan,
+
+  CRGB::Lavender,
+  CRGB::Silver,
+  CRGB::Azure,
+  CRGB::LightGrey,
+
+  CRGB::GhostWhite,
+  CRGB::Silver,
+  CRGB::White,
+  CRGB::RoyalBlue
+};
+
+// COOLING: How much does the air cool as it rises?
+// Less cooling = taller flames.  More cooling = shorter flames.
+// Default 55, suggested range 20-100
+//#define COOLINGNEW  55 // 100 // 55 // 86
+
+// SPARKING: What chance (out of 255) is there that a new spark will be lit?
+// Higher chance = more roaring fire.  Lower chance = more flickery fire.
+// Default 120, suggested range 50-200.
+#define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
 // ------------- метель -------------
 #define SNOW_DENSE            (60U)                         // плотность снега
 #define SNOW_TAIL_STEP        (100U)                        // длина хвоста
@@ -345,7 +402,6 @@ bool isWifiOffMode = false;
 #ifdef GENERAL_DEBUG
 static const char * enumConnectionStatus[] = { "WL_IDLE_STATUS", "WL_NO_SSID_AVAIL", "WL_SCAN_COMPLETED", "WL_CONNECTED", "WL_CONNECT_FAILED", "WL_CONNECTION_LOST", "WL_DISCONNECTED" }; //перечисление статусов сети
 #endif
-unsigned char matrixValue[8][16];
 
 bool TimerManager::TimerRunning = false;
 bool TimerManager::TimerHasFired = false;

@@ -369,7 +369,6 @@ void setup()
 
 
   // ОСТАЛЬНОЕ
-  memset(matrixValue, 0, sizeof(matrixValue));
   randomSeed(micros());
   changePower();
   loadingFlag = true;

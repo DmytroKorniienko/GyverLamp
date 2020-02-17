@@ -22,7 +22,8 @@ extern void showWarning(CRGB color,uint32_t duration,uint16_t blinkHalfPeriod);
 enum EFF_ENUM {                               // список и номера эффектов ниже в списке согласованы с android приложением! (не актуально, если приложение вычитывает список эффектов по EFF_ENUM)
 EFF_SPARKLES = (0U),                          // Конфетти
 EFF_FIRE,                                     // Огонь
-EFF_WHITTE_FIRE,                              // Белый огонь
+//EFF_WHITTE_FIRE,                              // Белый огонь
+EFF_WATERFALL,                                // Водопад
 EFF_RAINBOW_VER,                              // Радуга вертикальная
 EFF_RAINBOW_HOR,                              // Радуга горизонтальная
 EFF_RAINBOW_DIAG,                             // Радуга диагональная
@@ -86,11 +87,13 @@ void ballsRoutine(char*);
 void lightBallsRoutine(char*);
 void ballRoutine(char*);
 void whiteColorStripeRoutine(char*);
+void fire2012WithPalette(char*);
 
 EFFECT EFFECTS_ARR[] = {
   {EFF_SPARKLES, "SPARKLES", 1, 255, 1, 255, 1, 255, sparklesRoutine, NULL},
   {EFF_FIRE, "FIRE", 1, 255, 1, 255, 1, 255, fireRoutine, "C"},
-  {EFF_WHITTE_FIRE, "WHITTE_FIRE", 1, 255, 1, 255, 1, 255, fireRoutine, "W"},
+  //{EFF_WHITTE_FIRE, "WHITTE_FIRE", 1, 255, 1, 255, 1, 255, fireRoutine, "W"},
+  {EFF_WATERFALL, "WATERFALL", 1, 255, 1, 255, 1, 255, fire2012WithPalette, NULL},
   {EFF_RAINBOW_VER, "RAINBOW_VER", 1, 255, 1, 255, 1, 255, rainbowVerticalRoutine, NULL},
   {EFF_RAINBOW_HOR, "RAINBOW_HOR", 1, 255, 1, 255, 1, 255, rainbowHorizontalRoutine, NULL},
   {EFF_RAINBOW_DIAG, "RAINBOW_DIAG", 1, 255, 1, 255, 1, 255, rainbowDiagonalRoutine, NULL},

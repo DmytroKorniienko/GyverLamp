@@ -76,7 +76,8 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       } else {
         FastLED.setBrightness(modes[currentMode].Brightness);       
       }
-
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
+      
       #ifdef USE_MQTT
       if (espMode == 1U)
       {
@@ -97,10 +98,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
         FastLED.setBrightness(modes[currentMode].Brightness);       
       }
 
-      loadingFlag = true;
+      //loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
 
       #ifdef USE_MQTT
       if (espMode == 1U)
@@ -114,10 +116,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Speed = atoi(buff);
-      loadingFlag = true;
+      //loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
 
       #ifdef USE_MQTT
       if (espMode == 1U)
@@ -131,10 +134,11 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
     {
       memcpy(buff, &inputBuffer[3], strlen(inputBuffer));   // взять подстроку, состоящую последних символов строки inputBuffer, начиная с символа 4
       modes[currentMode].Scale = atoi(buff);
-      loadingFlag = true;
+      //loadingFlag = true;
       settChanged = true;
       eepromTimeout = millis();
       sendCurrent(inputBuffer);
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
 
       #ifdef USE_MQTT
       if (espMode == 1U)
@@ -153,6 +157,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       eepromTimeout = millis();
       changePower();
       sendCurrent(inputBuffer);
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
 
       #ifdef USE_MQTT
       if (espMode == 1U)
@@ -169,6 +174,7 @@ void processInputBuffer(char *inputBuffer, char *outputBuffer, bool generateOutp
       eepromTimeout = millis();
       changePower();
       sendCurrent(inputBuffer);
+      tmDemoTimer.reset(); // ресет таймаута для DEMO режима
 
       #ifdef USE_MQTT
       if (espMode == 1U)

@@ -66,141 +66,225 @@ void fadePixel(uint8_t i, uint8_t j, uint8_t step)          // новый фей
 }
 
 // ------------- огонь -----------------
+
+// ----- неперемещаемые/неизменные оперделения -----
+#define FIRE_FLAMEWIDTH           (8U)       // ширина очага (маски)
+#define FIRE_FLAMEHEIGHT          (8U)       // высота очага (маски)
+const uint8_t _bedshiftmin = FIRE_FLAMEWIDTH - FIRE_CORESHIFT ;
+const uint8_t _bedshiftmax = FIRE_FLAMEWIDTH + FIRE_CORESHIFT ;
+const uint8_t _flameshiftmin = FIRE_FLAMEWIDTH - FIRE_FLAMESHIFT ;
+const uint8_t _flameshiftmax = FIRE_FLAMEWIDTH + FIRE_FLAMESHIFT ;
+const uint8_t _corestrength = FIRE_CORESTRENGTH + 1U ;
+const uint8_t _coreactivity = 255U - FIRE_COREACTIVITY ;
+const uint8_t _corespeed = FIRE_CORESPEED + 1U ;
+const uint8_t _flamestrength = FIRE_FLAMESTRENGTH + 1U ;
+const uint8_t _flamespeed = FIRE_FLAMESPEED + 1U ;
+const uint8_t _sparkstrength = FIRE_SPARKSTRENGTH + 1U ;
+
+uint8_t matrixValue[WIDTH][FIRE_FLAMEHEIGHT];
 uint8_t line[WIDTH];
 uint8_t pcnt = 0U;
+uint8_t deltaHue = FIRE_FLAMEWIDTH;                    // текущее смещение пламени (hueMask)
+uint8_t shiftHue[HEIGHT];                              // массив дороожки горизонтального смещения пламени (hueMask)
+uint8_t deltaValue = FIRE_FLAMEWIDTH;                  // текущее смещение пламени (hueValue)
+uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
+uint8_t rowcounter;
 
 //these values are substracetd from the generated values to give a shape to the animation
-static const uint8_t valueMask[8][16] PROGMEM =
+static const uint8_t valueMask[FIRE_FLAMEHEIGHT][FIRE_FLAMEWIDTH] PROGMEM =
 {
-  {32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 },
-  {64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 },
-  {96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 },
-  {128, 64 , 32 , 0  , 0  , 32 , 64 , 128, 128, 64 , 32 , 0  , 0  , 32 , 64 , 128},
-  {160, 96 , 64 , 32 , 32 , 64 , 96 , 160, 160, 96 , 64 , 32 , 32 , 64 , 96 , 160},
-  {192, 128, 96 , 64 , 64 , 96 , 128, 192, 192, 128, 96 , 64 , 64 , 96 , 128, 192},
-  {255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255},
-  {255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255}
+  {32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 },
+  {64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 },
+  {96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 },
+  {128, 64 , 32 , 0  , 0  , 32 , 64 , 128},
+  {160, 96 , 64 , 32 , 32 , 64 , 96 , 160},
+  {192, 128, 96 , 64 , 64 , 96 , 128, 192},
+  {255, 160, 128, 96 , 96 , 128, 160, 255},
+  {255, 192, 160, 128, 128, 160, 192, 255}
 };
 
 //these are the hues for the fire,
 //should be between 0 (red) to about 25 (yellow)
-static const uint8_t hueMask[8][16] PROGMEM =
+static const uint8_t hueMask[FIRE_FLAMEHEIGHT][FIRE_FLAMEWIDTH] PROGMEM =
 {
-  {1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 },
-  {1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 },
-  {1 , 8 , 13, 16, 19, 16, 8 , 1 , 1 , 8 , 13, 16, 19, 16, 8 , 1 },
-  {1 , 5 , 11, 13, 13, 13, 5 , 1 , 1 , 5 , 11, 13, 13, 13, 5 , 1 },
-  {1 , 5 , 11, 11, 11, 11, 5 , 1 , 1 , 5 , 11, 11, 11, 11, 5 , 1 },
-  {0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 , 0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 },
-  {0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 },
-  {0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 }
+  {1 , 11, 19, 25, 25, 22, 11, 1 },
+  {1 , 8 , 13, 19, 25, 19, 8 , 1 },
+  {1 , 8 , 13, 16, 19, 16, 8 , 1 },
+  {1 , 5 , 11, 13, 13, 13, 5 , 1 },
+  {1 , 5 , 11, 11, 11, 11, 5 , 1 },
+  {0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 },
+  {0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 },
+  {0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 }
 };
-
 void fireRoutine(char *isColored)                            // C - цветной огонь, остальное - белый
+//void fireRoutine(bool isColored)                           // ******* для оригинальной прошивки Gunner47 *******
 {
-  if (loadingFlag)
-  {
+  /*if (loadingFlag) {
     loadingFlag = false;
-    FastLED.clear();
+    //FastLED.clear();
     generateLine();
     //memset(matrixValue, 0, sizeof(matrixValue)); без очистки
+    }*/
+  if (pcnt >= FIRE_PLUMEACTIVITY) {                         // внутренний делитель кадров для поднимающегося пламени
+    generateLine();                                         // перерисовать новую нижнюю линию случайным образом
+    pcnt %= FIRE_PLUMEACTIVITY;
   }
-  if (pcnt >= 100)
-  {
-    shiftUp();
-    generateLine();
-    pcnt = 0;
-  }
-  drawFrame(pcnt, (strcmp(isColored,"C")==0));
-  pcnt += 30;
+  shiftUp();                                                // смещение кадра вверх
+  drawFrame(FIRE_PLUMEACTIVITY - pcnt, (strcmp(isColored, "C") == 0));            // прорисовка экрана
+  //drawFrame(pcnt, isColored);                                                   // ******* прорисовка экрана для оригинальной прошивки Gunner47 *******
+  pcnt += FIRE_PLUMEFREQUENCY;                              // делитель кадров: задает скорость подъема пламени 25/100 ~ 1/4
 }
 
 // Randomly generate the next line (matrix row)
-void generateLine()
-{
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    line[x] = random(64, 255);
+void generateLine() {
+  for (uint8_t x = 0U; x < WIDTH; x++) {
+    line[x] = random(_coreactivity, 256);                   // заполнение случайным образом нижней линии теневой маски FIRE_COREACTIVITY =255 - без контраста, =192 - оригинал
   }
 }
 
-void shiftUp()
-{
-  for (uint8_t y = HEIGHT - 1U; y > 0U; y--)
-  {
-    for (uint8_t x = 0U; x < WIDTH; x++)
-    {
-      uint8_t newX = x;
-      if (x > 15U) newX = x % 16U;
-      if (y > 7U) continue;
-      matrixValue[y][newX] = matrixValue[y - 1U][newX];
+void shiftUp() {                                            //подъем кадра теневой маски
+  for (uint8_t y = FIRE_FLAMEHEIGHT - 1U; y > 0U; y--) {
+    for (uint8_t x = 0U; x < WIDTH; x++) {
+      matrixValue[x][y] = matrixValue[x][y - 1U];           //смещение пламени теневой маски (только для зоны очага)
     }
   }
 
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    uint8_t newX = x;
-    if (x > 15U) newX = x % 16U;
-    matrixValue[0U][newX] = line[newX];
+  for (uint8_t x = 0U; x < WIDTH; x++) {                                      // прорисовка новой нижней линии теневой маски
+    matrixValue[x][0U] = line[x];
   }
 }
 
 // draw a frame, interpolating between 2 "key frames"
 // @param pcnt percentage of interpolation
-
-void drawFrame(uint8_t pcnt, bool isColored)
-{
+void drawFrame(uint8_t pcnt, bool isColored) {                                // прорисовка нового кадра
   int32_t nextv;
+#ifdef FIRE_UNIVERSE                                                          // если определен универсальный огонь вычисляем его базовый цвет  
+  uint8_t baseHue = (float)modes[EFF_FIRE].Scale * 2.57;
+  uint8_t baseSat = (modes[EFF_FIRE].Scale == FIRE_WHITEVALUE) ? 0U : 255U ;  // отключение насыщенности при определенном положении колеса
+#else
+  uint8_t baseHue = isColored ? 255U : 0U;                                    // старое определение цвета
+  uint8_t baseSat = 255;
+#endif
+
+  //first row interpolates with the "next" line
+#if FIRE_CORESTRENGTH                                                         // смещение очага 
+  deltaValue = random(0U, _corestrength) && !(rowcounter % FIRE_CORERESIST) ? constrain (shiftValue[0] + random(0U, _corespeed) - random(0U, _corespeed),
+               _bedshiftmin, _bedshiftmax) : shiftValue[0];
+  shiftValue[0] = deltaValue;
+#endif
+
+#if FIRE_FLAMESTRENGTH                                                        // смещение от колыхания пламени
+  deltaHue = random(0U, _flamestrength) && !(rowcounter % FIRE_FLAMERESIST) ? constrain (shiftHue[0] + random(0U, _flamespeed) - random(0U, _flamespeed),
+             _flameshiftmin, _flameshiftmax) : shiftHue[0];
+  shiftHue[0] = deltaHue;                                                     // заносим это значение в стэк
+#endif
+  rowcounter++;
+
+  for (uint8_t x = 0U; x < WIDTH; x++) {                                      // прорисовка нижней строки (сначала делаем ее, так как потом будем пользоваться ее значением смещения)
+    nextv =                                                                   // расчет значения яркости относительно valueMask и нижерасположенной строки.
+      (( pcnt * matrixValue[x][0] + (255.0 - pcnt) * line[x]) / 255.0) + random(0, FIRE_VOLUMESEED)
+      - pgm_read_byte(&valueMask[0][(x + FIRE_MASKOFFSET + deltaValue) % FIRE_FLAMEWIDTH]);
+    CRGB color = CHSV(                                                        // вычисление цвета и яркости пикселя
+                   baseHue + random(0, FIRE_HUESEED) + pgm_read_byte(&hueMask[0][(x + FIRE_MASKOFFSET + deltaValue + deltaHue) % FIRE_FLAMEWIDTH]),      // H - смещение всполохов
+                   baseSat,                                                   // S - когда колесо масштаба =100 - белый огонь (экономим на 1 эффекте)
+                   (uint8_t)constrain(nextv, 0, 255));                        // V
+    leds[getPixelNumber(x, 0)] = color;                                       // прорисовка цвета очага
+  }
 
   //each row interpolates with the one before it
-  for (uint8_t y = HEIGHT - 1U; y > 0U; y--)
-  {
-    for (uint8_t x = 0U; x < WIDTH; x++)
-    {
-      uint8_t newX = x;
-      if (x > 15U) newX = x % 16U;
-      if (y < 8U)
-      {
-        nextv =
-          (((100.0 - pcnt) * matrixValue[y][newX]
-            + pcnt * matrixValue[y - 1][newX]) / 100.0)
-          - pgm_read_byte(&valueMask[y][newX]);
+  for (uint8_t y = HEIGHT - 1U; y > 0U; y--) {                                // прорисовка остальных строк с учетом значения низлежащих
+    deltaValue = shiftValue[y];                                               // извлекаем положение яркости частицы
+    shiftValue[y] = shiftValue[y - 1];                                        // подготавлеваем значение смешения для следующего кадра основываясь на предыдущем
+    deltaHue = shiftHue[y];                                                   // извлекаем положение оттенка частицы
+    shiftHue[y] = shiftHue[y - 1];                                            // подготавлеваем значение смешения для следующего кадра основываясь на предыдущем
 
-        CRGB color = CHSV(
-          isColored ? modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&hueMask[y][newX]) : 0U,     // H
-          isColored ? 255U : 0U,                                                               // S
-          (uint8_t)max(0, nextv)                                                               // V
-        );
+    if (y > FIRE_FLAMEHEIGHT) {                                               // цикл стирания текущей строоки для искр
+      for (uint8_t _x = 0U; _x < WIDTH; _x++) {                               // стираем строчку с искрами (очень не оптимально)
+        drawPixelXY(_x, y, 0U);
+      }
+    }
+    for (uint8_t x = 0U; x < WIDTH; x++) {                                    // пересчет координаты x для текущей строки
+      if (y < 8U) {                                                           // если строка представляет очаг
+        nextv =                                                               // расчет значения яркости относительно valueMask и нижерасположенной строки.
+          (( pcnt * matrixValue[x][y]
+             + (255.0 - pcnt) * matrixValue[x][y - 1]) / 255.0) + random(0, FIRE_VOLUMESEED)
+          - pgm_read_byte(&valueMask[y][(x + FIRE_MASKOFFSET + deltaValue) % FIRE_FLAMEWIDTH]);
+
+        CRGB color = CHSV(                                                    // определение цвета пикселя
+                       baseHue + random(0, FIRE_HUESEED) + pgm_read_byte(&hueMask[y][(x + FIRE_MASKOFFSET + deltaValue + deltaHue) % FIRE_FLAMEWIDTH ]),         // H - смещение всполохов
+                       baseSat,                                               // S - когда колесо масштаба =100 - белый огонь (экономим на 1 эффекте)
+                       (uint8_t)constrain(nextv, 0, 255));                    // V
 
         leds[getPixelNumber(x, y)] = color;
       }
-      else if (y == 8U && SPARKLES)
-      {
-        if (random(0, 20) == 0 && getPixColorXY(x, y - 1U) != 0U) drawPixelXY(x, y, getPixColorXY(x, y - 1U));
-        else drawPixelXY(x, y, 0U);
+      else if (y == FIRE_FLAMEHEIGHT && FIRE_SPARKLES) {                      // если это самая нижняя строка искр - формитуем искорку из пламени
+        if (random(0, FIRE_EVERYNSPARK) == 0 && getPixColorXY(x, y - 1U) != 0U) {
+          uint16_t px = getPixelNumber (x, y);
+          leds[px] = getPixColorXY(x, y - 2U);
+          leds[px] %= FIRE_SPARKSBRIGHT;
+        } else drawPixelXY(x, y, 0U);
       }
-      else if (SPARKLES)
-      {
-        // старая версия для яркости
-        if (getPixColorXY(x, y - 1U) > 0U)
-          drawPixelXY(x, y, getPixColorXY(x, y - 1U));
-        else drawPixelXY(x, y, 0U);
+      else if (FIRE_SPARKLES) {                                               // если это не самая нижняя строка искр - перемещаем искорку выше
+#if FIRE_SPARKSTRENGTH
+        uint8_t newX = (random(0, _sparkstrength)) ? x : (x + WIDTH + random(0U, 2U) - random(0U, 2U)) % WIDTH ;   // с вероятностью 1/3 смещаем искорку влево или вправо
+#else
+        uint8_t newX = x;
+#endif
+        if (getPixColorXY(x, y - 1U) > 0U) drawPixelXY(newX, y, getPixColorXY(x, y - 1U));    // рисуем искорку на новой строчке
       }
     }
   }
+}
 
-  //first row interpolates with the "next" line
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    uint8_t newX = x;
-    if (x > 15U) newX = x % 16U;
-    CRGB color = CHSV(
-      isColored ? modes[EFF_FIRE].Scale * 2.5 + pgm_read_byte(&(hueMask[0][newX])): 0U,        // H
-      isColored ? 255U : 0U,                                                                   // S
-      (uint8_t)(((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0)           // V
-    );
-    //leds[getPixelNumber(newX, 0)] = color;                                         // на форуме пишут что это ошибка - вместо newX должно быть x, иначе
-    leds[getPixelNumber(x, 0)] = color;                                              // на матрицах шире 16 столбцов нижний правый угол неработает
+// ============= водо/огне/лава/радуга/хренопад ===============
+void fire2012WithPalette(char *isColored) {
+  //bool fire_water = modes[EFF_WATERFALL].Scale <= 50;
+  //uint8_t COOLINGNEW = fire_water ? modes[EFF_WATERFALL].Scale * 2  + 20 : (100 - modes[EFF_WATERFALL].Scale ) *  2 + 20 ;
+  uint8_t scale = modes[EFF_WATERFALL].Scale;
+  uint8_t COOLINGNEW = constrain((uint16_t)(scale % 16) * 32 / HEIGHT + 16, 1, 255) ;
+  // Array of temperature readings at each simulation cell
+  static byte heat[WIDTH][HEIGHT];
+
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    // Step 1.  Cool down every cell a little
+    for (int i = 0; i < HEIGHT; i++) {
+      //heat[x][i] = qsub8(heat[x][i], random8(0, ((COOLINGNEW * 10) / HEIGHT) + 2));
+      heat[x][i] = qsub8(heat[x][i], random8(0, COOLINGNEW));
+    }
+
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for (int k = HEIGHT - 1; k >= 2; k--) {
+      heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
+    }
+
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+    if (random8() < SPARKINGNEW) {
+      int y = random8(2);
+      heat[x][y] = qadd8(heat[x][y], random8(160, 255));
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    for (int j = 0; j < HEIGHT; j++) {
+      // Scale the heat value from 0-255 down to 0-240
+      // for best results with color palettes.
+      byte colorindex = scale8(heat[x][j], 240);
+      if  (scale < 16) {            // Lavafall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(LavaColors_p, colorindex);
+      } else if (scale < 32) {      // Firefall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(HeatColors_p, colorindex);
+      } else if (scale < 48) {      // Waterfall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(WaterfallColors_p, colorindex);
+      } else if (scale < 64) {      // Skyfall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(CloudColors_p, colorindex);
+      } else if (scale < 80) {      // Forestfall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(ForestColors_p, colorindex);
+      } else if (scale < 96) {      // Rainbowfall
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(RainbowColors_p, colorindex);        
+      } else {                      // Aurora
+        leds[getPixelNumber(x, (HEIGHT - 1) - j)] = ColorFromPalette(RainbowStripeColors_p, colorindex);
+
+      }
+    }
   }
 }
 
@@ -411,6 +495,7 @@ void starfallRoutine(char *param)
 }
 
 // ------------- матрица ---------------
+/*
 void matrixRoutine(char *param)
 {
   for (uint8_t x = 0U; x < WIDTH; x++)
@@ -434,7 +519,37 @@ void matrixRoutine(char *param)
     }
   }
 }
+*/
+// ------------- матрица ---------------
+void matrixRoutine(char *param)
+{
+  for (uint8_t x = 0U; x < WIDTH; x++)
+  {
+    // заполняем случайно верхнюю строку
+    uint32_t thisColor = getPixColorXY(x, HEIGHT - 1U);
+    if (thisColor == 0U)
+      drawPixelXY(x, HEIGHT - 1U, 0xAAFFBB * (random(0, 100 - modes[EFF_MATRIX].Scale) == 0U)); //цвет, как в фильме вместо чистого зелёного 0x00FF00
+    else if (thisColor <= 0x001100)                                                             //было 0x002000
+      drawPixelXY(x, HEIGHT - 1U, 0U);
+    else if (thisColor <= 0x004400)                                                             //новая строка
+      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x001100);                                        //новая строка
+    else if (thisColor <= 0x005511)                                                             //новая строка
+      drawPixelXY(x, HEIGHT - 1U, 0x004400);                                                    //новая строка
+    else if (thisColor == 0xAAFFBB)                                                             //новая строка для отделения самой яркой точки от шлейфа
+      drawPixelXY(x, HEIGHT - 1U, 0x449955);                                                    //новая строка
+    else
+      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x111111);                                        //было 0x002000
+  }
 
+  // сдвигаем всё вниз
+  for (uint8_t x = 0U; x < WIDTH; x++)
+  {
+    for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+    {
+      drawPixelXY(x, y, getPixColorXY(x, y + 1U));
+    }
+  }
+}
 // ------------- светлячки --------------
 int32_t lightersPos[2U][LIGHTERS_AM];
 int8_t lightersSpeed[2U][LIGHTERS_AM];
