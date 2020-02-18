@@ -1,5 +1,5 @@
 // работа с бегущим текстом
-int32_t offset = (MIRR_V ? 0 : WIDTH);
+int32_t offset = WIDTH;
 uint32_t scrollTimer = 0LL;
 
 bool fillStringManual(const char* text, CRGB letterColor, bool stopText)
@@ -18,20 +18,18 @@ bool fillStringManual(const char* text, CRGB letterColor, bool stopText)
     }
     else
     {
-      if(!MIRR_V)
-        drawLetter(text[i], offset + (int16_t)j * (LET_WIDTH + SPACE), letterColor);
-      else
-        drawLetter(text[i], offset - (int16_t)j * (LET_WIDTH + SPACE), letterColor);
+      drawLetter(text[i], offset + (int16_t)j * (LET_WIDTH + SPACE), letterColor);
+
       i++;
       j++;
     }
   }
 
   if(!stopText)
-    (MIRR_V ? offset++ : offset--);
-  if ((!MIRR_V && offset < (int32_t)(-j * (LET_WIDTH + SPACE))) || (MIRR_V && offset > (int32_t)(j * (LET_WIDTH + SPACE))+WIDTH))       // строка убежала
+    offset--;
+  if (offset < (int32_t)(-j * (LET_WIDTH + SPACE)))       // строка убежала
   {
-    offset = (MIRR_V ? 0 : WIDTH);
+    offset = WIDTH;
     return true;
   }
 
@@ -58,19 +56,17 @@ bool fillString(const char* text, CRGB letterColor)
       }
       else
       {
-        if(!MIRR_V)
-          drawLetter(text[i], offset + (int16_t)j * (LET_WIDTH + SPACE), letterColor);
-        else
-          drawLetter(text[i], offset - (int16_t)j * (LET_WIDTH + SPACE), letterColor);
+        drawLetter(text[i], offset + (int16_t)j * (LET_WIDTH + SPACE), letterColor);
+
         i++;
         j++;
       }
     }
 
-    (MIRR_V ? offset++ : offset--);
-    if ((!MIRR_V && offset < (int32_t)(-j * (LET_WIDTH + SPACE))) || (MIRR_V && offset > (int32_t)(j * (LET_WIDTH + SPACE))+WIDTH))       // строка убежала
+    offset--;
+    if (offset < (int32_t)(-j * (LET_WIDTH + SPACE)))       // строка убежала
     {
-      offset = (MIRR_V ? 0 : WIDTH);
+      offset = WIDTH;
       return true;
     }
 
@@ -273,9 +269,7 @@ void drawLetter(uint16_t letter, int16_t offset, CRGB letterColor)
 
     for (uint16_t j = 0; j < LET_HEIGHT; j++)
     {
-      bool thisBit = MIRR_H
-        ? thisByte & (1 << j)
-        : thisByte & (1 << (LET_HEIGHT - 1 - j));
+      bool thisBit = thisByte & (1 << (LET_HEIGHT - 1 - j));
 
       if(TEXT_DIRECTION){
         if(MIRR_V){

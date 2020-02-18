@@ -204,8 +204,10 @@ bool telnetGreetingShown = false;                           // признак "�
 // работа с бегущим текстом
 // --- НАСТРОЙКИ ТЕКСТА ----------------
 #define TEXT_DIRECTION        (1U)                          // 1 - по горизонтали, 0 - по вертикали
-#define MIRR_V                (1U)                          // отразить текст по вертикали (0 / 1)
-#define MIRR_H                (0U)                          // отразить текст по горизонтали (0 / 1)
+//#define MIRR_V                (0U)                          // отразить текст по вертикали (0 / 1)
+//#define MIRR_H                (1U)                          // отразить текст по горизонтали (0 / 1)
+int MIRR_V=0;
+int MIRR_H=0;
 //#define ROTATE                (1U)                          // повернуть символ на 90 градусов (0 / 1)
 
 #define TEXT_HEIGHT           (1U)                          // высота, на которой бежит текст (от низа матрицы)
@@ -417,7 +419,7 @@ uint32_t FavoritesManager::nextModeAt = 0UL;
 
 bool CaptivePortalManager::captivePortalCalled = false;
 
-#define ONETOUCH_CLOCK // печать времени по однократному нажатию (Palpalych)
+//#define ONETOUCH_CLOCK // печать времени по однократному нажатию (Palpalych)
 
 byte GlobalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 byte numHold = 0;
@@ -452,3 +454,9 @@ static CHSV dawnColorMinus4 = CHSV(0, 0, 0);
 static CHSV dawnColorMinus5 = CHSV(0, 0, 0);
 static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
 #endif
+
+// веб-сервер
+MDNSResponder mdns;
+ESP8266WebServer server(80);
+String webPage = "";
+char webPageBuffer[2048];

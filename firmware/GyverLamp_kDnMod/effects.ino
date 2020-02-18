@@ -495,58 +495,29 @@ void starfallRoutine(char *param)
 }
 
 // ------------- матрица ---------------
-/*
-void matrixRoutine(char *param)
+void matrixRoutine(char *param) // Вариация от Сотнег
 {
+  // обрабатываем верхний ряд пикселей матрицы
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
-    // заполняем случайно верхнюю строку
+    // ох, если бы я сразу знал, что getPixColorXY возвращает другое значение, не то, которое было отправлено через drawPixelXY
     uint32_t thisColor = getPixColorXY(x, HEIGHT - 1U);
-    if (thisColor == 0U)
-      drawPixelXY(x, HEIGHT - 1U, 0x00FF00 * (random(0, 100 - modes[EFF_MATRIX].Scale) == 0U));
-    else if (thisColor < 0x002000)
-      drawPixelXY(x, HEIGHT - 1U, 0U);
-    else
-      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x002000);
+    if (thisColor == 0U)                                                                                          // если верхний пиксель не горит,
+      drawPixelXY(x, HEIGHT - 1U, (0x99ff00) * (random(0, 100 - modes[EFF_MATRIX].Scale) == 0U));                 //   заполняем его с вероятностью .Scale  + признак скорости
+    else if (thisColor <= 0x0d1406)                                                                               // если же он почти потух,
+      drawPixelXY(x, HEIGHT - 1U, 0U);                                                                            //   гасим его окончательно
+    else if (thisColor >= 0x96fc00)                                                                               // если он максимальной яркости,
+      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x467700);  //284400                                                //   резко снижаем яркость
+    else                                                                                                          // а иначе,
+      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x0a1100);                                                          //   снижаем яркость на 1 уровень
   }
-
+    
   // сдвигаем всё вниз
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
     for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
     {
-      drawPixelXY(x, y, getPixColorXY(x, y + 1U));
-    }
-  }
-}
-*/
-// ------------- матрица ---------------
-void matrixRoutine(char *param)
-{
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    // заполняем случайно верхнюю строку
-    uint32_t thisColor = getPixColorXY(x, HEIGHT - 1U);
-    if (thisColor == 0U)
-      drawPixelXY(x, HEIGHT - 1U, 0xAAFFBB * (random(0, 100 - modes[EFF_MATRIX].Scale) == 0U)); //цвет, как в фильме вместо чистого зелёного 0x00FF00
-    else if (thisColor <= 0x001100)                                                             //было 0x002000
-      drawPixelXY(x, HEIGHT - 1U, 0U);
-    else if (thisColor <= 0x004400)                                                             //новая строка
-      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x001100);                                        //новая строка
-    else if (thisColor <= 0x005511)                                                             //новая строка
-      drawPixelXY(x, HEIGHT - 1U, 0x004400);                                                    //новая строка
-    else if (thisColor == 0xAAFFBB)                                                             //новая строка для отделения самой яркой точки от шлейфа
-      drawPixelXY(x, HEIGHT - 1U, 0x449955);                                                    //новая строка
-    else
-      drawPixelXY(x, HEIGHT - 1U, thisColor - 0x111111);                                        //было 0x002000
-  }
-
-  // сдвигаем всё вниз
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
-    {
-      drawPixelXY(x, y, getPixColorXY(x, y + 1U));
+      drawPixelXY(x, y, getPixColorXY(x, y + 1U));                                                                //   просто копируем пиксель на пиксель ниже него)
     }
   }
 }

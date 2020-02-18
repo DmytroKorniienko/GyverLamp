@@ -17,17 +17,24 @@ bool osd_Tick() {                                                           // �
     osd_scrollTimer = millis(); osd_offset++;
   }
 
-  if(ONflag){
+  //if(ONflag){
     for (uint16_t i = 0; i < WIDTH; i++) {                                  // цикл прорисовки темного фона под бегущую ленту
       for (uint16_t j = 1; j < 10; j++) {                                   // TODO: по идее можно сделать эффекты фейдера ленты до и после прокрутки текста
         leds[getPixelNumber(i, j)] %= 16;                                   // TODO: эффекты фейдера можно сделать различными
       }
     }
-  }
+  //}
 
   if (osd_fillString()) {                                                   // прорисовка текста на экране
     osd_offset = 0; osd_string[0] = 0; return false;                        // текст полностью вывелся на экран, сброс папаметров, процедура готова к получению нового текста.
   }
+
+  if(lampMode == MODE_DEMO && GlobalBrightness>0)
+    FastLED.setBrightness(GlobalBrightness);
+  else if(lampMode != MODE_ALARMCLOCK)
+    FastLED.setBrightness(getBrightnessForPrintTime(thisTime, ONflag));
+  
+  FastLED.show();
 }
 
 bool osd_textDone() {

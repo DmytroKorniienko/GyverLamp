@@ -79,7 +79,7 @@ void buttonTick()
   if (clickCount == 1U)
   {
     #ifdef ONETOUCH_CLOCK     
-    //if (!osd_printCurrentTime(CRGB::White)){}          // попытка напечатать время. Если не получается или текст уже на экране, то переходим ко включению
+    if (!osd_printCurrentTime(CRGB::White)){}          // попытка напечатать время. Если не получается или текст уже на экране, то переходим ко включению
     #endif  
 
     #ifdef ONETOUCH_CLOCK

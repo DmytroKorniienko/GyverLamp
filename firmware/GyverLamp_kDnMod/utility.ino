@@ -34,6 +34,7 @@ uint32_t getPixColorXY(uint16_t x, uint16_t y)
   return getPixColor(getPixelNumber(x, y));
 }
 
+/*
 // ************* НАСТРОЙКА МАТРИЦЫ *****
 #if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)
 #define _WIDTH WIDTH
@@ -82,6 +83,56 @@ uint32_t getPixColorXY(uint16_t x, uint16_t y)
 #pragma message "Wrong matrix parameters! Set to default"
 
 #endif
+*/
+// ************* НАСТРОЙКА МАТРИЦЫ *****
+#if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)
+#define _WIDTH WIDTH
+#define THIS_X (MIRR_V ? (WIDTH - x - 1) : x)
+#define THIS_Y (MIRR_H ? (HEIGHT - y - 1) : y)
+
+#elif (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 1)
+#define _WIDTH HEIGHT
+#define THIS_X (MIRR_V ? (HEIGHT - y - 1) : y)
+#define THIS_Y (MIRR_H ? (WIDTH - x - 1) : x)
+
+#elif (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 0)
+#define _WIDTH WIDTH
+#define THIS_X (MIRR_V ? (WIDTH - x - 1) : x)
+#define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
+
+#elif (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3)
+#define _WIDTH HEIGHT
+#define THIS_X (MIRR_V ? y : (HEIGHT - y - 1))
+#define THIS_Y (MIRR_H ? (WIDTH - x - 1) : x)
+
+#elif (CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 2)
+#define _WIDTH WIDTH
+#define THIS_X (MIRR_V ?  x : (WIDTH - x - 1))
+#define THIS_Y (MIRR_H ? y : (HEIGHT - y - 1))
+
+#elif (CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 3)
+#define _WIDTH HEIGHT
+#define THIS_X (MIRR_V ? y : (HEIGHT - y - 1))
+#define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
+
+#elif (CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 2)
+#define _WIDTH WIDTH
+#define THIS_X (MIRR_V ?  x : (WIDTH - x - 1))
+#define THIS_Y (MIRR_H ? (HEIGHT - y - 1) : y)
+
+#elif (CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 1)
+#define _WIDTH HEIGHT
+#define THIS_X (MIRR_V ? (HEIGHT - y - 1) : y)
+#define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
+
+#else
+#define _WIDTH WIDTH
+#define THIS_X x
+#define THIS_Y y
+#pragma message "Wrong matrix parameters! Set to default"
+
+#endif
+
 
 // получить номер пикселя в ленте по координатам
 uint32_t getPixelNumber(uint16_t x, uint16_t y)

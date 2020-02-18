@@ -378,8 +378,52 @@ void setup()
   if(isWifiOffMode)
     lampMode = MODE_DEMO; // запуск в демо-режиме если используется без кнопки и без сети
   #endif
+
+  webserver_setup();
 }
 
+void webserver_setup()
+{
+  webPage += "<h1>ESP8266 Web Server</h1>";
+  webPage += "<p>MIRR_H=%d <a href=\"MIRR_H\"><button>Invert MIRR_H</button></a></p>";
+  webPage += "<p>MIRR_V=%d <a href=\"MIRR_V\"><button>Invert MIRR_V</button></a></p>";
+  webPage += "<p>Curent Date: <a href=\"printDate\"><button>Print DATE</button></a></p>";
+
+  sprintf(webPageBuffer,webPage.c_str(),MIRR_H,MIRR_V);
+
+  if (mdns.begin("esp8266", WiFi.localIP())) {
+    #ifdef GENERAL_DEBUG
+    Serial.println("MDNS responder started"); //  "Запущен MDNSresponder"
+    #endif
+  }
+ 
+  server.on("/", [](){
+    server.send(200, "text/html", webPageBuffer);
+  });
+  
+  server.on("/MIRR_H", [](){
+    MIRR_H = (MIRR_H ? 0 : 1);
+    sprintf(webPageBuffer,webPage.c_str(),MIRR_H,MIRR_V);
+    server.send(200, "text/html", webPageBuffer);
+  });
+  
+  server.on("/MIRR_V", [](){
+    MIRR_V = (MIRR_V ? 0 : 1);
+    sprintf(webPageBuffer,webPage.c_str(),MIRR_H,MIRR_V);
+    server.send(200, "text/html", webPageBuffer);
+  });
+
+  server.on("/printDate", [](){
+    printTime(thisTime, true, ONflag, false, false);   // оригинальный вариант вывода времени
+    if (!osd_printCurrentTime(CRGB::White)){}          // попытка напечатать время. Если не получается или текст уже на экране, то переходим ко включению
+    server.send(200, "text/html", webPageBuffer);
+  });
+
+  server.begin();
+  #ifdef GENERAL_DEBUG
+  Serial.println("HTTP server started");
+  #endif
+}
 
 void loop()
 {
@@ -438,6 +482,8 @@ void loop()
   #if defined(GENERAL_DEBUG) && GENERAL_DEBUG_TELNET
   handleTelnetClient();
   #endif
+
+  server.handleClient();
   
   delay(1);
   ESP.wdtFeed();                                            // пнуть собаку
